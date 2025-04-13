@@ -18,7 +18,7 @@ st.set_page_config(
 )
 
 # Load cleaned datasets
-load_day_data = pd.read_csv('./dashboard/day_data.csv', sep=","')
+load_day_data = pd.read_csv('./dashboard/day_data.csv', sep=",")
 load_hour_data = pd.read_csv('./dashboard/hour_data.csv', sep=",")
 
 # Helper function untuk menyiapkan dataframe 
