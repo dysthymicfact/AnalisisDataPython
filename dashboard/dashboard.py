@@ -18,8 +18,8 @@ st.set_page_config(
 )
 
 # Load cleaned datasets
-load_day_data = pd.read_csv('day_data.csv')
-load_hour_data = pd.read_csv('hour_data.csv')
+load_day_data = pd.read_csv('./dashboard/day_data.csv', sep=","')
+load_hour_data = pd.read_csv('./dashboard/hour_data.csv', sep=",")
 
 # Helper function untuk menyiapkan dataframe 
 def create_daily_bikesharing(df):
