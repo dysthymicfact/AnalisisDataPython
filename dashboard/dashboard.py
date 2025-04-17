@@ -183,7 +183,7 @@ fig = px.line(monthly_trend_melted, x='year_month', y='total_count', color='user
               title='Tren Peminjaman Sepeda per Bulan (Registered vs Casual)',
               labels={'year_month': 'Bulan', 'total_count': 'Total Peminjaman', 'user_type': 'Tipe Pengguna'},
               markers=True,
-              color_discrete_map=color_mapping)  # Menetapkan warna khusus
+              color_discrete_map=color_mapping)  
 
 # Menyesuaikan tampilan sumbu x agar tidak bertabrakan
 fig.update_layout(xaxis=dict(tickangle=-45))
@@ -404,10 +404,6 @@ grouped['workingday'] = grouped['workingday'].map(workingday_mapping)
 
 # Peta warna konsisten untuk kedua kategori (Weekday dan Weekend)
 workingday_color_map = {'Weekend': '#fc8d62', 'Weekday': '#66c2a5'}
-
-#grouped = load_day_data.groupby(['season', 'workingday'], observed=True)['cnt'].mean().reset_index()
-#grouped['season'] = grouped['season'].map({1: 'Spring', 2: 'Summer', 3: 'Fall', 4: 'Winter'})
-#grouped['workingday'] = grouped['workingday'].map(workingday_mapping)
 
 fig3 = px.bar(
     grouped,
