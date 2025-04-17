@@ -180,8 +180,8 @@ monthly_trend_melted['user_type'] = monthly_trend_melted['user_type'].map(user_t
 
 # Membuat grafik line dengan warna yang sesuai
 fig = px.line(monthly_trend_melted, x='year_month', y='total_count', color='user_type',
-              title='Tren Peminjaman Sepeda per Bulan (Registered vs Casual)',
-              labels={'year_month': 'Bulan', 'total_count': 'Total Peminjaman', 'user_type': 'Tipe Pengguna'},
+              title='Tren Penyewaan Sepeda per Bulan (Registered vs Casual)',
+              labels={'year_month': 'Bulan', 'total_count': 'Jumlah Penyewaan', 'user_type': 'Tipe Pengguna'},
               markers=True,
               color_discrete_map=color_mapping)  
 
