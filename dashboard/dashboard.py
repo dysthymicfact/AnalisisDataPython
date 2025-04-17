@@ -292,13 +292,13 @@ fig = px.line(
         'weathersit': 'Kondisi Cuaca'
     },
     markers=True,
-    color_discrete_map=color_mapping  # Warna tetap sama di kedua grafik
+    color_discrete_map=color_mapping  
 )
 
 # Menyesuaikan tampilan sumbu dan layout
 fig.update_layout(
-    xaxis=dict(tickmode='linear', tick0=0, dtick=2),  # Interval tiap 2 jam
-    template='plotly_white',  # Tampilan minimalis
+    xaxis=dict(tickmode='linear', tick0=0, dtick=2),  
+    template='plotly_white',  
     legend_title=dict(text='Kondisi Cuaca'),
     xaxis_title='Jam',
     yaxis_title='Rata-rata Jumlah Penyewaan Sepeda'
@@ -386,7 +386,6 @@ fig2.update_layout(
 )
 
 ### Barplot 3: Rata-rata penyewaan sepeda Weekday vs Weekend per Musim ###
-
 # Salin data agar tidak mengubah dataframe asli
 df = load_day_data.copy()
 
