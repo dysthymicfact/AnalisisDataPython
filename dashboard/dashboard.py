@@ -5,7 +5,6 @@ import streamlit as st
 import plotly.express as px
 from pandas.api.types import CategoricalDtype
 import plotly.graph_objects as go
-from babel.numbers import format_currency
 
 sns.set(style='dark')
 
@@ -23,7 +22,7 @@ load_hour_data = pd.read_csv('./dashboard/hour_data.csv', sep=",")
 
 # Helper function untuk menyiapkan dataframe 
 def create_daily_bikesharing(df):
-    df['dteday'] = pd.to_datetime(df['dteday'])  # Konversi ke datetime
+    df['dteday'] = pd.to_datetime(df['dteday'])  
     daily_bikesharing_df = df.groupby('dteday').agg({
         'cnt': 'sum',
         'registered': 'sum',
@@ -34,44 +33,10 @@ def create_daily_bikesharing(df):
     daily_bikesharing_df['weekday'] = daily_bikesharing_df['dteday'].dt.day_name()
     return daily_bikesharing_df
 
-# Helper function untuk menghitung RFM Analysis
-def create_rfm_df(load_hour_data, group_by_column='registered', add_scores=True):
-   
-    # Salin DataFrame asli
-    df_copy = load_hour_data.copy()
-    df_copy['dteday'] = pd.to_datetime(df_copy['dteday'])  # Konversi ke datetime
-    
-    # Hitung current_date (tanggal terkini berdasarkan dataset)
-    current_date = df_copy['dteday'].max()
-    
-    # RFM Analysis: Hitung Recency, Frequency, dan Monetary
-    rfm_df = (
-        df_copy.groupby(group_by_column, as_index=False)
-        .agg(
-            Recency=('dteday', lambda x: (current_date - x.max()).days),
-            Frequency=('instant', 'count'),  # Asumsi setiap baris = 1 transaksi
-            Monetary=('cnt', 'sum')          # Total peminjaman
-        )
-    )
-    
-    # Tambahkan Skor R, F, M jika diperlukan
-    if add_scores:
-        rfm_df['R_Score'] = pd.qcut(rfm_df['Recency'], q=5, labels=[5, 4, 3, 2, 1])
-        rfm_df['F_Score'] = pd.qcut(rfm_df['Frequency'], q=5, labels=[1, 2, 3, 4, 5])
-        rfm_df['M_Score'] = pd.qcut(rfm_df['Monetary'], q=5, labels=[1, 2, 3, 4, 5])
-        # Gabungkan skor RFM
-        rfm_df['RFM_Score'] = (
-            rfm_df['R_Score'].astype(str) +
-            rfm_df['F_Score'].astype(str) +
-            rfm_df['M_Score'].astype(str)
-        )
-    
-    return rfm_df
-
 # Filter tanggal
-load_day_data['dteday'] = pd.to_datetime(load_day_data['dteday'])  # Format ke datetime
-load_day_data.sort_values(by='dteday', inplace=True)  # Perbaiki sort_values
-load_day_data.reset_index(drop=True, inplace=True)  # Reset index
+load_day_data['dteday'] = pd.to_datetime(load_day_data['dteday'])  
+load_day_data.sort_values(by='dteday', inplace=True)  
+load_day_data.reset_index(drop=True, inplace=True)  
 
 # Tentukan min dan max date dari kolom dteday
 min_date = load_day_data['dteday'].min()
@@ -101,7 +66,6 @@ st.caption('Copyright (c) dysthymicfact')
 
 # Menyiapkan dataframe
 daily_bikesharing_df = create_daily_bikesharing(main_df)
-rfm_df = create_rfm_df(load_hour_data, group_by_column='registered', add_scores=True)
 
 # Melengkapi dashboard dengan visualisasi data
 st.header('Bikesharing Dashboard 🚴🏻‍♀️')
@@ -139,7 +103,7 @@ grafik.add_trace(go.Scatter(
     y=daily_bikesharing_df['cnt'],
     mode='lines',
     name='Total Bike Sharing',
-    line=dict(color='blue', width=2)
+    line=dict(color= '#00008B', width=2)
 ))
 
 # Menambahkan garis untuk pengguna kasual
@@ -148,7 +112,7 @@ grafik.add_trace(go.Scatter(
     y=daily_bikesharing_df['casual'],
     mode='lines',
     name='Casual Users',
-    line=dict(color='teal', width=2)
+    line=dict(color='#20B2AA', width=2)
 ))
 
 # Menambahkan garis untuk pengguna terdaftar
@@ -157,7 +121,7 @@ grafik.add_trace(go.Scatter(
     y=daily_bikesharing_df['registered'],
     mode='lines',
     name='Registered Users',
-    line=dict(color='orange', width=2)
+    line=dict(color='#FFA07A', width=2)
 ))
 
 # Menyoroti titik dengan jumlah penyewaan tertinggi
@@ -185,7 +149,14 @@ st.plotly_chart(grafik)
 st.write(f"📅 Tanggal dengan penyewaan sepeda terbanyak: **{formatted_date}** dengan total **{max_total}** penyewaan.")
 
 
-# Visualisasi 2: Tren penyewaan sepeda per bulan (registered vs casual)
+
+# Definisikan warna khusus untuk setiap kategori pengguna
+color_mapping = {
+    'Registered Users': '#FFA07A', 
+    'Casual Users': '#20B2AA'      
+}
+
+# Visualisasi 2: Tren Penyewaan Sepeda per Bulan (registered vs casual)
 # Buat kolom baru dengan format "YYYY-MM" untuk pengelompokan
 daily_bikesharing_df['year_month'] = daily_bikesharing_df['dteday'].dt.to_period('M')
 
@@ -207,10 +178,12 @@ user_type_mapping = {
 }
 monthly_trend_melted['user_type'] = monthly_trend_melted['user_type'].map(user_type_mapping)
 
+# Membuat grafik line dengan warna yang sesuai
 fig = px.line(monthly_trend_melted, x='year_month', y='total_count', color='user_type',
               title='Tren Peminjaman Sepeda per Bulan (Registered vs Casual)',
               labels={'year_month': 'Bulan', 'total_count': 'Total Peminjaman', 'user_type': 'Tipe Pengguna'},
-              markers=True)
+              markers=True,
+              color_discrete_map=color_mapping)  # Menetapkan warna khusus
 
 # Menyesuaikan tampilan sumbu x agar tidak bertabrakan
 fig.update_layout(xaxis=dict(tickangle=-45))
@@ -218,48 +191,58 @@ fig.update_layout(xaxis=dict(tickangle=-45))
 # Menampilkan plot
 st.plotly_chart(fig)
 
-# Visualisasi 3: Rata-rata Penyewaan Sepeda per Hari Berdasarkan Cuaca 
-# Pastikan kolom 'dteday' dan 'weekday' ada di load_day_data
-load_day_data['dteday'] = pd.to_datetime(load_day_data['dteday'])  # Konversi ke tipe datetime
-load_day_data['weekday'] = load_day_data['dteday'].dt.day_name()  # Tambahkan kolom nama hari
 
-# Periksa keberadaan kolom 'weathersit' sebelum melanjutkan analisis
+# Definisikan warna untuk setiap kondisi cuaca 
+color_mapping = {
+    'Clear': '#4C9AFF',         # Biru pastel
+    'Mist + Cloudy': '#FF6F61', # Merah pastel
+    'Light Snow': '#A2D5F2',    # Biru muda pastel
+    'Heavy Rain': '#7D7FCF'     # Biru keunguan
+}
+
+# Visualisasi 3: Rata-rata Penyewaan Sepeda per Hari
+# Pastikan kolom 'dteday' dan 'weekday' ada di load_day_data
+load_day_data['dteday'] = pd.to_datetime(load_day_data['dteday'])  
+load_day_data['weekday'] = load_day_data['dteday'].dt.day_name() 
+
+# Cek keberadaan kolom 'weathersit' 
 if 'weathersit' in load_day_data.columns:
     # Buat pivot table untuk rata-rata penyewaan berdasarkan hari dan cuaca
     pivot_table = load_day_data.pivot_table(
-        index='weekday',         # Kelompokkan berdasarkan nama hari
-        columns='weathersit',    # Kondisi cuaca sebagai kategori
-        values='cnt',            # Total penyewaan
-        aggfunc='mean'           # Hitung rata-rata
+        index='weekday',         
+        columns='weathersit',    
+        values='cnt',            
+        aggfunc='mean'           
     ).reset_index()
 
     # Ubah pivot table ke format long agar mudah divisualisasikan
     pivot_long = pivot_table.melt(
-        id_vars='weekday',       # Kolom yang dipertahankan
-        var_name='weathersit',   # Nama kondisi cuaca
-        value_name='average_count'  # Nama rata-rata penyewaan
+        id_vars='weekday',       
+        var_name='weathersit',   
+        value_name='average_count'  
     )
 
-    # Pastikan urutan hari dari Minggu hingga Sabtu
+    # Mengurutkan hari dari Minggu hingga Sabtu
     ordered_days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
     pivot_long['weekday'] = pd.Categorical(
-        pivot_long['weekday'],        # Kolom nama hari
-        categories=ordered_days,      # Urutan yang diinginkan
-        ordered=True                  # Tetapkan sebagai urutan
+        pivot_long['weekday'],        
+        categories=ordered_days,      
+        ordered=True                  
     )
 
-# Pastikan data disortir sesuai urutan hari
+    # Pastikan data disortir sesuai urutan hari
     pivot_long = pivot_long.sort_values(by='weekday')
 
     # Visualisasikan menggunakan Plotly
     fig = px.line(
         pivot_long,
-        x='weekday',                  # Sumbu X sebagai nama hari
-        y='average_count',            # Sumbu Y sebagai rata-rata penyewaan
-        color='weathersit',           # Warna berdasarkan cuaca
+        x='weekday',                  
+        y='average_count',            
+        color='weathersit',           
         title='Rata-rata Penyewaan Sepeda per Hari Berdasarkan Cuaca',
         labels={'weekday': 'Hari', 'average_count': 'Rata-rata Penyewaan', 'weathersit': 'Kondisi Cuaca'},
-        markers=True                  # Tambahkan marker untuk garis
+        markers=True,
+        color_discrete_map=color_mapping
     )
 
     # Menampilkan plot di Streamlit
@@ -268,11 +251,17 @@ if 'weathersit' in load_day_data.columns:
 else:
     st.error("Kolom 'weathersit' tidak ditemukan pada dataset day_data.csv. Silakan periksa kembali dataset.")
 
-# Visualisasi 4: Rata-rata Jumlah Penyewaan Sepeda per Jam Berdasarkan Kondisi Cuaca
-# Menghitung rata-rata penyewaan sepeda berdasarkan jam (0-23) dan kondisi cuaca
-weather_by_hour = load_hour_data.pivot_table(values="cnt", index="hr", columns="weathersit", aggfunc="mean").reset_index()
 
-# Mapping nama kondisi cuaca jika belum deskriptif
+# Visualisasi 4: Rata-rata Penyewaan Sepeda per Jam
+# Menghitung rata-rata penyewaan sepeda berdasarkan jam (0-23) dan kondisi cuaca
+weather_by_hour = load_hour_data.pivot_table(
+    values="cnt",
+    index="hr",
+    columns="weathersit",
+    aggfunc="mean"
+).reset_index()
+
+# Mapping nama kondisi cuaca
 weather_mapping = {
     1: 'Clear',
     2: 'Mist + Cloudy',
@@ -280,7 +269,7 @@ weather_mapping = {
     4: 'Heavy Rain'
 }
 
-# Ubah nama kolom cuaca (opsional, tergantung dataset)
+# Ubah nama kolom cuaca 
 weather_by_hour.rename(columns=weather_mapping, inplace=True)
 
 # Transformasi ke long format untuk visualisasi Plotly
@@ -302,7 +291,8 @@ fig = px.line(
         'average_count': 'Rata-rata Penyewaan',
         'weathersit': 'Kondisi Cuaca'
     },
-    markers=True
+    markers=True,
+    color_discrete_map=color_mapping  # Warna tetap sama di kedua grafik
 )
 
 # Menyesuaikan tampilan sumbu dan layout
@@ -316,6 +306,7 @@ fig.update_layout(
 
 # Tampilkan plot di Streamlit
 st.plotly_chart(fig)
+
 
 # Visualisasi 5, 6, dan 7 = Barplot 1, 2, dan 3
 # Pastikan kolom 'workingday' memiliki nilai valid (hanya dilakukan sekali)
@@ -345,7 +336,7 @@ fig1 = px.bar(
     color='workingday',
     text='cnt',
     title="Perbandingan Rata-rata Total Penyewaan Sepeda Weekday vs Weekend",
-    labels={'workingday': 'Jenis Hari', 'cnt': 'Rata-rata Penyewaan Sepeda (cnt)'},
+    labels={'workingday': 'Tipe Hari', 'cnt': 'Rata-rata Penyewaan Sepeda (cnt)'},
     color_discrete_map=workingday_color_map
 )
 
@@ -356,7 +347,7 @@ fig1.update_traces(
 fig1.update_layout(
     xaxis_title='Jenis Hari',
     yaxis_title='Rata-rata Penyewa Sepeda',
-    legend_title_text='Jenis Hari',
+    legend_title_text='Tipe Hari',
     template='plotly_white',
     title_x=0.0
 )
@@ -445,36 +436,6 @@ fig3.update_layout(
 st.plotly_chart(fig1)
 st.plotly_chart(fig2)
 st.plotly_chart(fig3)
-
-
-# Konversi current_date menjadi datetime
-current_date = pd.to_datetime(load_hour_data['dteday'].max())  # Mendapatkan tanggal terkini dari kolom 'dteday'
-
-# Pastikan kolom 'dteday' sudah dalam format datetime
-load_hour_data['dteday'] = pd.to_datetime(load_hour_data['dteday'])
-
-# RFM Analysis per Jam
-rfm_by_hour = (load_hour_data.groupby('hr', as_index=False).agg(
-    Recency=('dteday', lambda x: (current_date - x.max()).days),  # Hitung selisih hari
-    Frequency=('instant', 'count'),  # Aktivitas per jam
-    Monetary=('cnt', 'sum')          # Total peminjaman per jam
-).sort_values('Monetary', ascending=False))
-
-
-# Visualisasi 8: Distribusi Monetary per Jam
-st.subheader('Analisis RFM')
-fig_hour = px.bar(rfm_by_hour, x='hr', y='Monetary', color='Monetary',
-                  title='Distribusi Monetary Berdasarkan Jam',
-                  labels={'hr': 'Jam', 'Monetary': 'Total Peminjaman'})
-fig_hour.update_layout(xaxis_title='Jam', yaxis_title='Total Peminjaman')
-st.plotly_chart(fig_hour)
-
-# Visualisasi 9: Distribusi Skor RFM untuk Registered User
-fig_rfm_score = px.histogram(rfm_df, x='RFM_Score', color='RFM_Score',
-                             title='Distribusi Skor RFM untuk Registered User',
-                             labels={'RFM_Score': 'Skor RFM', 'count': 'Jumlah Pengguna'})
-fig_rfm_score.update_layout(xaxis_title='Skor RFM', yaxis_title='Jumlah Pengguna', showlegend=False)
-st.plotly_chart(fig_rfm_score)
 
 
 st.caption('Copyright (c) dysthymicfact')
