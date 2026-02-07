@@ -14,3 +14,4 @@ cd proyek_analisis_data
 ```
 streamlit run dashboard.py
 ```
+atau bisa langsung di akses melalui https://bikesharing-dewir.streamlit.app/
